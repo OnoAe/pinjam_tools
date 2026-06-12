@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Scan QR - Pinjam Tools</title>
+    <title>Pinjam Tools</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: #f0f2f5;
             margin: 0;
             padding: 16px;
@@ -15,8 +16,6 @@
         .container { max-width: 500px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 20px; }
         .header h2 { color: #2c3e50; margin: 0; }
-        .header p { color: #7f8c8d; font-size: 14px; }
-        
         .card {
             background: white;
             border-radius: 16px;
@@ -32,15 +31,8 @@
             border-left: 4px solid #3498db;
             padding-left: 12px;
         }
-        
-        #qr-reader {
-            width: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        #qr-reader__dashboard { padding: 10px; }
+        #qr-reader { width: 100%; border-radius: 12px; overflow: hidden; }
         #qr-reader video { width: 100% !important; }
-        
         .btn {
             width: 100%;
             padding: 14px;
@@ -54,7 +46,6 @@
         .btn-primary { background: #3498db; color: white; }
         .btn-success { background: #27ae60; color: white; }
         .btn-warning { background: #f39c12; color: white; }
-        
         .input-field {
             width: 100%;
             padding: 12px;
@@ -63,7 +54,6 @@
             font-size: 15px;
             margin-top: 5px;
         }
-        
         .badge {
             display: inline-block;
             padding: 4px 12px;
@@ -73,7 +63,6 @@
         }
         .badge-success { background: #27ae60; color: white; }
         .badge-secondary { background: #95a5a6; color: white; }
-        
         .alert {
             padding: 14px;
             border-radius: 12px;
@@ -83,15 +72,12 @@
         .alert-danger { background: #fee; color: #c0392b; border: 1px solid #fcc; }
         .alert-success { background: #e8f8f5; color: #27ae60; border: 1px solid #a3e4d7; }
         .alert-info { background: #e8f4fd; color: #2980b9; border: 1px solid #bde0fe; }
-        
         .info-row { margin-bottom: 10px; font-size: 15px; }
         .info-label { font-weight: bold; color: #7f8c8d; display: inline-block; width: 70px; }
         .info-value { color: #2c3e50; }
-        
         .loading { text-align: center; padding: 50px; }
         .spinner {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
             border-radius: 50%;
@@ -102,14 +88,9 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
         .text-center { text-align: center; }
-        small { color: #7f8c8d; font-size: 12px; }
         hr { margin: 15px 0; border: none; border-top: 1px solid #eee; }
-        .hidden { display: none; }
     </style>
-    <!-- Library QR Scanner -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 <div class="container">
@@ -118,64 +99,51 @@
         <p>Scan QR Code yang ditempel di tools</p>
     </div>
 
-    <!-- Tampilan Loading -->
     <div id="loading" class="loading">
         <div class="spinner"></div>
         <div>Memuat...</div>
     </div>
 
-    <!-- Tampilan Scanner QR (muncul pertama kali) -->
     <div id="scanner-section" class="card" style="display:none;">
         <div class="card-title">📷 ARAHKAN KAMERA KE QR CODE</div>
         <div id="qr-reader"></div>
         <div id="qr-status" class="text-center" style="margin-top: 10px;"></div>
-        <button class="btn btn-primary" onclick="restartScanner()" style="margin-top: 15px;">🔄 Mulai Scan</button>
+        <button class="btn btn-primary" onclick="restartScanner()">🔄 Mulai Scan</button>
     </div>
 
-    <!-- Tampilan Form Pinjam (muncul setelah scan berhasil) -->
     <div id="form-section" style="display:none;">
-        <!-- Card Info User -->
         <div class="card">
             <div class="card-title">👤 Informasi Peminjam</div>
             <div id="infoUser"></div>
         </div>
-
-        <!-- Card Info Tools -->
         <div class="card">
             <div class="card-title">🔨 Informasi Tools</div>
             <div id="infoTools"></div>
         </div>
-
-        <!-- Form Nama (khusus eksternal) -->
         <div class="card" id="formNama" style="display:none;">
             <div class="card-title">📝 Data Diri</div>
             <input type="text" id="namaPeminjam" class="input-field" placeholder="Masukkan nama lengkap Anda">
         </div>
-
-        <!-- Jumlah Peminjaman -->
         <div class="card">
             <div class="card-title">🔢 Jumlah Peminjaman</div>
             <input type="number" id="quantity" class="input-field" min="1" value="1">
             <small id="infoMaxQty"></small>
         </div>
-
-        <!-- Tombol Aksi -->
         <div id="tombolAksi"></div>
-        
-        <!-- Tombol Scan Ulang -->
         <button class="btn btn-primary" onclick="rescan()">📷 Scan QR Code Lain</button>
-        
-        <!-- Pesan Notifikasi -->
         <div id="pesan"></div>
-        
         <hr>
-        <div class="text-center">
-            <small>v1.0 - Scan QR Code Tools</small>
-        </div>
+        <div class="text-center"><small>v1.0</small></div>
     </div>
 </div>
 
 <script>
+// ============================================================
+// 🔧 GANTI URL INI DENGAN WEB APP KAMU YANG ASLI
+// ============================================================
+const WEB_APP_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+// ============================================================
+
 let html5QrCode = null;
 let userEmail = '';
 let dataAnggota = null;
@@ -183,70 +151,49 @@ let dataTools = null;
 let peminjamanAktif = null;
 let currentToolId = null;
 
-// Ambil email user saat halaman dimuat
-google.script.run.withSuccessHandler(function(email) {
-    userEmail = email;
-    if (!userEmail || userEmail === '') {
-        document.getElementById('loading').innerHTML = `
-            <div class="alert alert-danger" style="text-align:center;">
-                ⚠️ PERLU LOGIN GOOGLE<br>
-                <small style="display:block; margin-top:10px;">Silakan login ke akun Google di HP ini</small>
-            </div>
-        `;
-        return;
-    }
-    // Sembunyikan loading, tampilkan scanner
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('scanner-section').style.display = 'block';
-    startScanner();
-}).getUserEmail();
+// Ambil email user dari backend Apps Script
+fetch(WEB_APP_URL + '?action=getUserEmail')
+    .then(response => response.json())
+    .then(data => {
+        userEmail = data.email;
+        if (!userEmail || userEmail === '') {
+            document.getElementById('loading').innerHTML = '<div class="alert alert-danger">⚠️ Login ke akun Google dulu</div>';
+            return;
+        }
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('scanner-section').style.display = 'block';
+        startScanner();
+    })
+    .catch(err => {
+        document.getElementById('loading').innerHTML = '<div class="alert alert-danger">❌ Gagal konek ke server. Pastikan Web App sudah dideploy.</div>';
+        console.error(err);
+    });
 
 function startScanner() {
     if (html5QrCode) {
         try { html5QrCode.stop(); } catch(e) {}
     }
-    
     html5QrCode = new Html5Qrcode("qr-reader");
-    const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-    };
-    
-    html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        (decodedText) => {
-            // Scan berhasil
-            console.log("Scan result:", decodedText);
-            document.getElementById('qr-status').innerHTML = '<span style="color:green;">✅ QR terdeteksi! Memproses...</span>';
-            
-            // Hentikan scanner
-            if (html5QrCode) {
-                html5QrCode.stop();
-            }
-            
-            // Proses tool ID dari hasil scan
-            let toolId = decodedText;
-            
-            // Jika hasil scan berupa URL dengan parameter tool
-            if (decodedText.includes('?tool=')) {
-                toolId = decodedText.split('?tool=')[1].split('&')[0];
-            } else if (decodedText.includes('/exec?tool=')) {
-                toolId = decodedText.split('/exec?tool=')[1].split('&')[0];
-            }
-            
-            processToolId(toolId);
-        },
-        (error) => {
-            // Error scan biasa, abaikan
-            console.log("Scan error:", error);
-        }
-    ).catch(err => {
-        console.error("Start scanner error:", err);
-        document.getElementById('qr-status').innerHTML = '<span style="color:red;">❌ Gagal memulai kamera. Izinkan akses kamera.</span>';
-    });
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanError)
+        .catch(err => {
+            document.getElementById('qr-status').innerHTML = '<span style="color:red;">❌ Gagal akses kamera. Izinkan akses kamera.</span>';
+        });
 }
+
+function onScanSuccess(decodedText) {
+    if (html5QrCode) html5QrCode.stop();
+    document.getElementById('qr-status').innerHTML = '✅ QR terdeteksi! Memproses...';
+    let toolId = decodedText;
+    if (decodedText.includes('?tool=')) {
+        toolId = decodedText.split('?tool=')[1].split('&')[0];
+    } else if (decodedText.includes('/exec?tool=')) {
+        toolId = decodedText.split('/exec?tool=')[1].split('&')[0];
+    }
+    processToolId(toolId);
+}
+
+function onScanError(err) { console.log(err); }
 
 function restartScanner() {
     document.getElementById('qr-status').innerHTML = '';
@@ -260,36 +207,28 @@ function processToolId(toolId) {
     currentToolId = toolId;
     document.getElementById('qr-status').innerHTML = '🔍 Mengecek data tools...';
     
-    // Ambil data tools
-    google.script.run.withSuccessHandler(function(tools) {
-        if (!tools) {
-            document.getElementById('qr-status').innerHTML = `
-                <span style="color:red;">❌ Tool ID "${toolId}" tidak ditemukan di database!</span>
-                <button class="btn btn-primary" onclick="restartScanner()" style="margin-top:10px;">Scan Ulang</button>
-            `;
+    Promise.all([
+        fetch(`${WEB_APP_URL}?action=getDataTools&toolId=${toolId}`).then(r => r.json()),
+        fetch(`${WEB_APP_URL}?action=cekAnggotaInternal&email=${userEmail}`).then(r => r.json()),
+        fetch(`${WEB_APP_URL}?action=cekPeminjamanAktif&email=${userEmail}&toolId=${toolId}`).then(r => r.json())
+    ]).then(([tools, anggota, peminjaman]) => {
+        if (!tools || tools === null) {
+            document.getElementById('qr-status').innerHTML = `<span style="color:red;">❌ Tool "${toolId}" tidak ditemukan di database!</span>`;
             return;
         }
         dataTools = tools;
-        
-        // Cek anggota internal
-        google.script.run.withSuccessHandler(function(anggota) {
-            dataAnggota = anggota;
-            
-            // Cek peminjaman aktif
-            google.script.run.withSuccessHandler(function(peminjaman) {
-                peminjamanAktif = peminjaman;
-                tampilkanForm();
-                
-                // Sembunyikan scanner, tampilkan form
-                document.getElementById('scanner-section').style.display = 'none';
-                document.getElementById('form-section').style.display = 'block';
-            }).cekPeminjamanAktif(userEmail, toolId);
-        }).cekAnggotaInternal(userEmail);
-    }).getDataTools(toolId);
+        dataAnggota = anggota;
+        peminjamanAktif = peminjaman;
+        tampilkanForm();
+        document.getElementById('scanner-section').style.display = 'none';
+        document.getElementById('form-section').style.display = 'block';
+    }).catch(err => {
+        document.getElementById('qr-status').innerHTML = '<span style="color:red;">❌ Gagal mengambil data tools. Cek backend.</span>';
+        console.error(err);
+    });
 }
 
 function rescan() {
-    // Reset semua
     document.getElementById('form-section').style.display = 'none';
     document.getElementById('scanner-section').style.display = 'block';
     document.getElementById('qr-status').innerHTML = '';
@@ -298,25 +237,19 @@ function rescan() {
 }
 
 function tampilkanForm() {
-    // Tampilkan info user
     let userHtml = `<div class="info-row"><span class="info-label">Email:</span><span class="info-value">${userEmail}</span></div>`;
-    
     if (dataAnggota.isInternal) {
-        userHtml += `
-            <div class="info-row"><span class="info-label">Status:</span><span class="info-value"><span class="badge badge-success">✓ Anggota Internal</span></span></div>
-            <div class="info-row"><span class="info-label">Nama:</span><span class="info-value">${dataAnggota.nama}</span></div>
-        `;
+        userHtml += `<div class="info-row"><span class="info-label">Status:</span><span class="info-value"><span class="badge badge-success">✓ Anggota Internal</span></span></div>
+                     <div class="info-row"><span class="info-label">Nama:</span><span class="info-value">${dataAnggota.nama}</span></div>`;
         document.getElementById('formNama').style.display = 'none';
     } else {
         userHtml += `<div class="info-row"><span class="info-label">Status:</span><span class="info-value"><span class="badge badge-secondary">Peminjam Eksternal</span></span></div>`;
         document.getElementById('formNama').style.display = 'block';
     }
     document.getElementById('infoUser').innerHTML = userHtml;
-    
-    // Tampilkan info tools
+
     let statusBadge = dataTools.available > 0 ? 'badge-success' : 'badge-warning';
     let statusText = dataTools.available > 0 ? 'Tersedia' : 'Habis';
-    
     let toolsHtml = `
         <div class="info-row"><span class="info-label">Kode:</span><span class="info-value">${dataTools.id}</span></div>
         <div class="info-row"><span class="info-label">Nama:</span><span class="info-value"><strong>${dataTools.nama}</strong></span></div>
@@ -325,80 +258,70 @@ function tampilkanForm() {
         <div class="info-row"><span class="info-label">Status:</span><span class="info-value"><span class="badge ${statusBadge}">${statusText}</span></span></div>
     `;
     document.getElementById('infoTools').innerHTML = toolsHtml;
-    
-    // Set max quantity
-    const qtyInput = document.getElementById('quantity');
-    qtyInput.max = dataTools.available;
+
+    document.getElementById('quantity').max = dataTools.available;
     document.getElementById('infoMaxQty').innerHTML = `Maksimal: ${dataTools.available} ${dataTools.uom}`;
-    
-    // Tampilkan tombol aksi
+
     const tombolDiv = document.getElementById('tombolAksi');
     tombolDiv.innerHTML = '';
-    
     if (peminjamanAktif.ada) {
         if (dataAnggota.isInternal) {
             tombolDiv.innerHTML = `<button class="btn btn-warning" onclick="prosesKembali()">🔄 KEMBALIKAN TOOLS</button>`;
         } else {
-            tombolDiv.innerHTML = `<div class="alert alert-info">📌 Anda sedang meminjam tools ini. Silakan hubungi anggota internal untuk mengembalikan.</div>`;
+            tombolDiv.innerHTML = `<div class="alert alert-info">📌 Anda sedang meminjam. Hubungi internal untuk mengembalikan.</div>`;
         }
     } else if (dataTools.available > 0) {
         tombolDiv.innerHTML = `<button class="btn btn-success" onclick="prosesPinjam()">🔧 PINJAM TOOLS</button>`;
     } else {
-        tombolDiv.innerHTML = `<div class="alert alert-danger">⚠️ Stok tools habis! Tidak dapat dipinjam.</div>`;
+        tombolDiv.innerHTML = `<div class="alert alert-danger">⚠️ Stok habis!</div>`;
     }
 }
 
 function prosesPinjam() {
     const qty = parseInt(document.getElementById('quantity').value);
-    
     if (qty < 1 || qty > dataTools.available) {
-        showPesan(`Jumlah tidak valid! Maksimal ${dataTools.available} ${dataTools.uom}`, 'danger');
+        showPesan(`Jumlah maksimal ${dataTools.available}`, 'danger');
         return;
     }
-    
     let nama = '';
     if (!dataAnggota.isInternal) {
         nama = document.getElementById('namaPeminjam').value.trim();
-        if (!nama) {
-            showPesan('Silakan isi nama lengkap Anda!', 'danger');
-            return;
-        }
+        if (!nama) { showPesan('Isi nama lengkap!', 'danger'); return; }
     } else {
         nama = dataAnggota.nama;
     }
-    
-    showPesan('⏳ Memproses peminjaman...', 'info');
-    
-    google.script.run.withSuccessHandler(function(result) {
-        if (result.success) {
-            showPesan(result.message, 'success');
-            setTimeout(function() { rescan(); }, 2000);
-        } else {
-            showPesan(result.message, 'danger');
-        }
-    }).prosesTransaksi(currentToolId, userEmail, nama, qty, 'pinjam');
+    showPesan('Memproses...', 'info');
+    fetch(`${WEB_APP_URL}?action=pinjam&toolId=${currentToolId}&email=${userEmail}&nama=${encodeURIComponent(nama)}&quantity=${qty}`)
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                showPesan('✅ ' + result.message, 'success');
+                setTimeout(() => rescan(), 2000);
+            } else {
+                showPesan('❌ ' + result.message, 'danger');
+            }
+        });
 }
 
 function prosesKembali() {
-    showPesan('⏳ Memproses pengembalian...', 'info');
-    
-    google.script.run.withSuccessHandler(function(result) {
-        if (result.success) {
-            showPesan(result.message, 'success');
-            setTimeout(function() { rescan(); }, 2000);
-        } else {
-            showPesan(result.message, 'danger');
-        }
-    }).prosesTransaksi(currentToolId, userEmail, '', 0, 'kembali');
+    showPesan('Memproses...', 'info');
+    fetch(`${WEB_APP_URL}?action=kembali&toolId=${currentToolId}&email=${userEmail}`)
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                showPesan('✅ ' + result.message, 'success');
+                setTimeout(() => rescan(), 2000);
+            } else {
+                showPesan('❌ ' + result.message, 'danger');
+            }
+        });
 }
 
 function showPesan(msg, type) {
     const div = document.getElementById('pesan');
     const alertClass = type === 'danger' ? 'alert-danger' : (type === 'success' ? 'alert-success' : 'alert-info');
     div.innerHTML = `<div class="alert ${alertClass}">${msg}</div>`;
-    if (type !== 'info') {
-        setTimeout(function() { div.innerHTML = ''; }, 3000);
-    }
+    if (type !== 'info') setTimeout(() => div.innerHTML = '', 3000);
 }
 </script>
 </body>
